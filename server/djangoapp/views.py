@@ -1,5 +1,6 @@
 # Uncomment the required imports before adding the code
-
+from .models import CarMake, CarModel
+from .populate import initiate
 from django.shortcuts import render
 # from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.models import User
@@ -93,6 +94,28 @@ def registration(request):
         data = {"userName":username,"error":"Already Registered"}
         return JsonResponse(data)
 
+def get_cars(request):
+    # Conta quantos objetos CarMake existem no banco de dados
+    count = CarMake.objects.count()
+    print(f"Number of CarMake objects: {count}")  # Debugging: imprime o número de objetos
+
+    # Se não houver nenhum CarMake, chama a função initiate para popular o banco de dados
+    if count == 0:
+        initiate()
+
+    # Obtém todos os objetos CarModel com relacionamento pre-carregado para CarMake
+    car_models = CarModel.objects.select_related('car_make')
+
+    # Cria uma lista de dicionários contendo os nomes dos modelos e suas marcas associadas
+    cars = []
+    for car_model in car_models:
+        cars.append({
+            "CarModel": car_model.name,
+            "CarMake": car_model.car_make.name
+        })
+
+    # Retorna os dados como uma resposta JSON
+    return JsonResponse({"CarModels": cars})
 # # Update the `get_dealerships` view to render the index page with
 # a list of dealerships
 # def get_dealerships(request):
